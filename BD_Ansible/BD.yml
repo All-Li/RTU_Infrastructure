@@ -1,0 +1,59 @@
+---
+- hosts: all
+  become: true
+  vars:
+    container_count: 1
+    default_container_name: BD_Server
+    default_container_image: alizone/my-rtu-server:v1
+
+  tasks:
+  - name: Set ansible_python_interpreter for AzureVM hosts
+    set_fact:
+     ansible_python_interpreter: /usr/bin/python3
+    when: "'linuxAzure' in group_names"
+ 
+  - name: Check and Print Linux version
+    debug: var=ansible_os_family 
+
+  - block:
+      - name: Install aptitude
+        apt:
+          name: aptitude
+          state: latest
+          update_cache: true
+
+      - name: Install required system packages
+        apt:
+          pkg:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - software-properties-common
+            - python3-pip
+            - python3-setuptools
+          state: latest
+          update_cache: true
+
+      - name: Update apt and install docker
+        apt:
+          name: docker.io
+          state: latest
+          update_cache: true
+
+      - name: Install Docker Module for Python
+        pip:
+          name: docker
+    when: ansible_os_family == "Debian"
+
+  - name: Pull Docker image
+    docker_image:
+      name: "{{ default_container_image }}"
+
+  - name: Create containers
+    docker_container:
+      name: "{{ default_container_name }}{{ item }}"
+      image: "{{ default_container_image }}"
+      ports:
+        - "8080:80"
+      state: started
+    with_sequence: count={{ container_count }}

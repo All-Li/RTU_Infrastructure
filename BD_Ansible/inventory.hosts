@@ -1,0 +1,6 @@
+[all:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+[servers]
+linuxAWS  ansible_host=X.XXX.XXX.XXX    ansible_user=ubuntu
+linuxAzure ansible_host=XX.XXX.XXX.XXX    ansible_user=adminuser
